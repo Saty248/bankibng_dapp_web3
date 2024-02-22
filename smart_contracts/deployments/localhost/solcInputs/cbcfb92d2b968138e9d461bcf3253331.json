@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Fd.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.19;\nerror invalidId(uint _txId);\nerror not_matured();\nerror no_account();\nerror Invalid_amount();\ncontract Fd {\n    uint txId = 0;\n    struct ValuePeriod {\n        uint value;\n        uint timePeriod;\n    }\n\n    mapping(address => mapping(uint => uint)) FdTime;\n    mapping(address => uint[]) clientTxIds;\n    mapping(uint => ValuePeriod) txId_FdValueWithTime;\n\n    constructor() {}\n\n    function depositFund(uint time) external payable {\n        if(msg.value<=0) revert Invalid_amount();\n        txId++;\n        //time period to mature is set\n        FdTime[msg.sender][txId] = block.timestamp + time;\n        //txId added to client address\n        clientTxIds[msg.sender].push(txId);\n\n        ValuePeriod memory v1 = ValuePeriod(msg.value, time);\n        //txId mapped to value with time\n        txId_FdValueWithTime[txId] = v1;\n    }\n\n    function withDrawFund(uint _txId) external payable {\n        //check for valid txId;\n        bool f = validTxid(_txId);\n        if (f == false) {\n            revert invalidId(_txId);\n        }\n        uint matureTime = FdTime[msg.sender][_txId];\n        if (block.timestamp > matureTime) {\n            ValuePeriod memory v1 = txId_FdValueWithTime[_txId];\n            uint interest = 0;\n            if (v1.timePeriod >= 15 && v1.timePeriod < 30) {\n                interest = (4 * v1.value) / 100;\n            } else if (v1.timePeriod >= 30) {\n                interest = (7 * v1.value) / 100;\n            }\n            uint matureAmt = v1.value + interest;\n            bool isDelete = deleleTxId(_txId);\n            if (isDelete) {\n                (bool sent /* bytes memory data */, ) = msg.sender.call{\n                    value: matureAmt\n                }(\"\");\n                require(sent, \"Failed to send Ether\");\n            }\n        } else {\n            revert not_matured();\n        }\n    }\n\n    function deleleTxId(uint _txId) internal returns (bool) {\n        uint[] storage client_txIds = clientTxIds[msg.sender];\n\n        uint f = client_txIds.length;\n\n        for (uint i = 0; i < client_txIds.length; i++) {\n            if (_txId == client_txIds[i]) {\n                f = i;\n                break;\n            }\n        }\n        if (f != client_txIds.length) {\n            delete client_txIds[f];\n            return true;\n        } else {\n            return false;\n        }\n    }\n\n    function validTxid(uint _txId) public view returns (bool) {\n        uint[] memory client_txIds = clientTxIds[msg.sender];\n        if(client_txIds.length==0){\n            revert no_account();\n        }\n\n        bool f = true;\n\n        for (uint i = 0; i < client_txIds.length; i++) {\n            if (_txId == client_txIds[i]) {\n                f = true;\n                break;\n            }\n        }\n        return f;\n    }\n\n    function timeToMature(uint _txId) external view returns (int) {\n        require(validTxid(_txId), \"invalid id\");\n        if((FdTime[msg.sender][_txId] <block.timestamp)){\n            return -1;\n        }else{\n            return int(FdTime[msg.sender][_txId] - block.timestamp);\n        }\n    }\n\n    function client_txs() external view returns (uint[] memory) {\n        return clientTxIds[msg.sender];\n    }\n\n    function value_matureTime(\n        uint _txId\n    ) public view returns (ValuePeriod memory) {\n        require(validTxid(_txId), \"invalid Id\");\n        return txId_FdValueWithTime[_txId];\n    }\n\n    fallback() external payable {\n        \n    }\n\n    receive() external payable {\n       \n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

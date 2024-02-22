@@ -1,0 +1,38 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/testing.sol": {
+      "content": "\n\n// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.19;\nerror not_Owner();\nerror not_valid_address();\ncontract testing {\n    event Log(string func, uint gas);\n\n    address payable owner;\n    uint c=0;\n    constructor(address payable _owner) {\n        owner=_owner;\n        }\n        modifier onlyOwner(){\n            if(msg.sender!=owner){\n                    revert not_Owner();\n                }\n            _;\n        }\n        modifier validAddress(address _ad1) {\n            if(_ad1==address(0)){\n                revert not_valid_address();\n            }\n            _;\n            \n        }\n\n        function increment() public  {\n            c++;\n        }\n        function decrement() public {\n            c--;\n        }\n        function getter() public  virtual returns(uint){\n            return c;\n        }\n        function withdraw() onlyOwner  external{\n            (bool sent,)=owner.call{value:address(this).balance}(\"\");\n             require(sent, \"Failed to send Ether\");\n        }\n        fallback() external {\n             emit Log(\"fallback\", gasleft());\n        }\n        receive() external payable {\n        emit Log(\"receive\", gasleft());\n    }\n\n\n}"
+    },
+    "contracts/testing2.sol": {
+      "content": "\n\n// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.19;\nerror not_Owner();\nerror not_valid_address();\ncontract testing2 {\n    event Log(string func, uint gas);\n\n    address payable owner;\n    uint c=0;\n    constructor(address payable _owner) {\n        owner=_owner;\n        }\n        modifier onlyOwner(){\n            if(msg.sender!=owner){\n                    revert not_Owner();\n                }\n            _;\n        }\n        modifier validAddress(address _ad1) {\n            if(_ad1==address(0)){\n                revert not_valid_address();\n            }\n            _;\n            \n        }\n\n        function increment() public  {\n            c++;\n        }\n        function decrement() public {\n            c--;\n        }\n        function getter() public view returns(uint){\n            return c;\n        }\n        function withdraw() onlyOwner  external{\n            (bool sent,)=owner.call{value:address(this).balance}(\"\");\n             require(sent, \"Failed to send Ether\");\n        }\n        fallback() external {\n             emit Log(\"fallback\", gasleft());\n        }\n        receive() external payable {\n        emit Log(\"receive\", gasleft());\n    }\n\n\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
